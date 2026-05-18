@@ -1,480 +1,297 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from 'react';
 import {
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
+  View,
   Text,
   TextInput,
-  View,
-} from "react-native";
-import { StatusBar } from "expo-status-bar";
-import {
-  SafeAreaProvider,
-  SafeAreaView,
-} from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { initialBooks } from "./src/data/mockBooks";
-import type { ActiveLoan, Book } from "./src/types";
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { searchExternalBook, addBookToCatalog } from '../../services/bookService';
+import { Book } from '../../types';
 
-const palette = {
-  bg: "#f5f0e8",
-  card: "#ffffff",
-  text: "#1c1917",
-  muted: "#78716c",
-  line: "#e7e5e4",
-  primary: "#3f4f46",
-  accent: "#b45309",
-  accentSoft: "#fff7ed",
-  available: "#166534",
-  unavailable: "#9a3412",
-};
+export const AddBookScreen = ({ onClose, onAddBook }: any) => {
+  const [isbn, setIsbn] = useState('');
+  const [quantidade, setQuantidade] = useState('1');
+  const [loading, setLoading] = useState(false);
+  const [bookFound, setBookFound] = useState<Book | null>(null);
+  const [manualMode, setManualMode] = useState(false);
 
-function addDaysISO(base: Date, days: number): string {
-  const d = new Date(base);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+  const [manualBook, setManualBook] = useState({
+    title: '',
+    author: '',
+    publisher: '',
+    year: '',
+    category: '',
+    location: ''
+  });
 
-function AppContent() {
-  const [tab, setTab] = useState<"catalog" | "loans">("catalog");
-  const [books, setBooks] = useState<Book[]>(() => [...initialBooks]);
-  const [loans, setLoans] = useState<ActiveLoan[]>([]);
-  const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Book | null>(null);
+  const searchBook = async () => {
+    if (!isbn.trim()) {
+      Alert.alert('Erro', 'Digite um ISBN');
+      return;
+    }
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return books;
-    return books.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q) ||
-        b.isbn.toLowerCase().includes(q)
+    setLoading(true);
+    setBookFound(null);
+
+    const result = await searchExternalBook(isbn);
+
+    if (result) {
+      setBookFound(result);
+      Alert.alert('Sucesso', `Livro encontrado: ${result.title}`);
+    } else {
+      Alert.alert(
+        'Livro não encontrado',
+        'Este livro não está na nossa base externa. Deseja cadastrar manualmente?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Cadastrar Manualmente', onPress: () => setManualMode(true) }
+        ]
+      );
+    }
+
+    setLoading(false);
+  };
+
+  const handleAddBook = () => {
+    if (!bookFound && !manualMode) return;
+
+    const qtd = parseInt(quantidade);
+    if (isNaN(qtd) || qtd < 1) {
+      Alert.alert('Erro', 'Quantidade inválida');
+      return;
+    }
+
+    let newBook: Book;
+
+    if (bookFound) {
+      newBook = { ...bookFound };
+    } else {
+      if (!manualBook.title || !manualBook.author) {
+        Alert.alert('Erro', 'Preencha título e autor');
+        return;
+      }
+
+      newBook = {
+        id: Date.now().toString(),
+        title: manualBook.title,
+        author: manualBook.author,
+        publisher: manualBook.publisher || 'Não informada',
+        year: parseInt(manualBook.year) || new Date().getFullYear(),
+        isbn: isbn || `MANUAL-${Date.now()}`,
+        totalCopies: qtd,
+        availableCopies: qtd,
+        location: manualBook.location || 'Geral',
+        category: manualBook.category || 'Geral'
+      };
+    }
+
+    onAddBook(newBook);
+    Alert.alert('Sucesso', `${newBook.title} adicionado com ${qtd} exemplar(es)!`);
+    
+    setIsbn('');
+    setQuantidade('1');
+    setBookFound(null);
+    setManualMode(false);
+    onClose();
+  };
+
+  if (manualMode) {
+    return (
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>Cadastro Manual de Livro</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Título *"
+          value={manualBook.title}
+          onChangeText={text => setManualBook({ ...manualBook, title: text })}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Autor *"
+          value={manualBook.author}
+          onChangeText={text => setManualBook({ ...manualBook, author: text })}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Editora"
+          value={manualBook.publisher}
+          onChangeText={text => setManualBook({ ...manualBook, publisher: text })}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Ano"
+          value={manualBook.year}
+          onChangeText={text => setManualBook({ ...manualBook, year: text })}
+          keyboardType="numeric"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Categoria"
+          value={manualBook.category}
+          onChangeText={text => setManualBook({ ...manualBook, category: text })}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Localização (ex: A1-01)"
+          value={manualBook.location}
+          onChangeText={text => setManualBook({ ...manualBook, location: text })}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Quantidade de exemplares"
+          value={quantidade}
+          onChangeText={setQuantidade}
+          keyboardType="numeric"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleAddBook}>
+          <Text style={styles.buttonText}>Cadastrar Livro</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={() => setManualMode(false)}
+        >
+          <Text style={styles.buttonText}>Voltar para Busca por ISBN</Text>
+        </TouchableOpacity>
+      </ScrollView>
     );
-  }, [books, query]);
-
-  function borrow(book: Book) {
-    if (!book.available) return;
-    const today = new Date();
-    const withdrawal = today.toISOString().slice(0, 10);
-    const due = addDaysISO(today, 14);
-    setLoans((prev) => [
-      {
-        id: `${book.id}-${Date.now()}`,
-        bookId: book.id,
-        title: book.title,
-        author: book.author,
-        withdrawalDate: withdrawal,
-        returnDate: due,
-      },
-      ...prev,
-    ]);
-    setBooks((prev) =>
-      prev.map((b) => (b.id === book.id ? { ...b, available: false } : b))
-    );
-    setSelected(null);
-  }
-
-  function returnLoan(loanId: string, bookId: string) {
-    setLoans((prev) => prev.filter((l) => l.id !== loanId));
-    setBooks((prev) =>
-      prev.map((b) => (b.id === bookId ? { ...b, available: true } : b))
-    );
-  }
-
-  function formatBR(iso: string) {
-    const [y, m, d] = iso.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("pt-BR");
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
-        <Text style={styles.brand}>Biblioteca</Text>
-        <Text style={styles.sub}>Empréstimo de livros</Text>
-      </View>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Adicionar Novo Livro ao Acervo</Text>
 
-      <View style={styles.tabs}>
-        <Pressable
-          onPress={() => setTab("catalog")}
-          style={[styles.tab, tab === "catalog" && styles.tabActive]}
-        >
-          <Ionicons
-            name="library-outline"
-            size={20}
-            color={tab === "catalog" ? palette.accent : palette.muted}
-          />
-          <Text
-            style={[styles.tabLabel, tab === "catalog" && styles.tabLabelActive]}
-          >
-            Catálogo
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setTab("loans")}
-          style={[styles.tab, tab === "loans" && styles.tabActive]}
-        >
-          <Ionicons
-            name="bookmarks-outline"
-            size={20}
-            color={tab === "loans" ? palette.accent : palette.muted}
-          />
-          <Text style={[styles.tabLabel, tab === "loans" && styles.tabLabelActive]}>
-            Meus empréstimos
-          </Text>
-          {loans.length > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{loans.length}</Text>
-            </View>
-          ) : null}
-        </Pressable>
-      </View>
+      <Text style={styles.label}>Buscar por ISBN:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Digite o código ISBN do livro"
+        value={isbn}
+        onChangeText={setIsbn}
+        keyboardType="numeric"
+      />
 
-      {tab === "catalog" ? (
-        <View style={styles.panel}>
-          <View style={styles.searchWrap}>
-            <Ionicons name="search" size={18} color={palette.muted} />
-            <TextInput
-              placeholder="Buscar por título, autor ou ISBN"
-              placeholderTextColor={palette.muted}
-              value={query}
-              onChangeText={setQuery}
-              style={styles.search}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </View>
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listPad}
-            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-            ListEmptyComponent={
-              <Text style={styles.empty}>Nenhum livro encontrado.</Text>
-            }
-            renderItem={({ item }) => (
-              <Pressable
-                style={styles.card}
-                onPress={() => setSelected(item)}
-                android_ripple={{ color: "#00000012" }}
-              >
-                <View style={styles.cardTop}>
-                  <Text style={styles.title} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <View
-                    style={[
-                      styles.pill,
-                      item.available ? styles.pillOk : styles.pillNo,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.pillText,
-                        item.available ? styles.pillTextOk : styles.pillTextNo,
-                      ]}
-                    >
-                      {item.available ? "Disponível" : "Indisponível"}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.author}>{item.author}</Text>
-                <Text style={styles.meta}>ISBN {item.isbn}</Text>
-              </Pressable>
-            )}
+      <TouchableOpacity style={styles.button} onPress={searchBook} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.buttonText}>Buscar Livro</Text>
+        )}
+      </TouchableOpacity>
+
+      {bookFound && (
+        <View style={styles.bookInfo}>
+          <Text style={styles.bookTitle}>{bookFound.title}</Text>
+          <Text>Autor: {bookFound.author}</Text>
+          <Text>Editora: {bookFound.publisher}</Text>
+          <Text>Ano: {bookFound.year}</Text>
+          <Text>Categoria: {bookFound.category}</Text>
+
+          <Text style={styles.label}>Quantidade de exemplares:</Text>
+          <TextInput
+            style={styles.input}
+            value={quantidade}
+            onChangeText={setQuantidade}
+            keyboardType="numeric"
+            placeholder="Número de cópias"
           />
-        </View>
-      ) : (
-        <View style={styles.panel}>
-          <FlatList
-            data={loans}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listPad}
-            ListEmptyComponent={
-              <View style={styles.emptyBox}>
-                <Ionicons name="book-outline" size={40} color={palette.muted} />
-                <Text style={styles.emptyTitle}>Nenhum empréstimo ativo</Text>
-                <Text style={styles.emptySub}>
-                  No catálogo, escolha um livro disponível e toque em “Pegar
-                  emprestado”.
-                </Text>
-              </View>
-            }
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-            renderItem={({ item }) => (
-              <View style={styles.loanCard}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <Text style={styles.author}>{item.author}</Text>
-                  <Text style={styles.dates}>
-                    Retirada: {formatBR(item.withdrawalDate)} · Devolução:{" "}
-                    {formatBR(item.returnDate)}
-                  </Text>
-                </View>
-                <Pressable
-                  style={styles.returnBtn}
-                  onPress={() => returnLoan(item.id, item.bookId)}
-                >
-                  <Text style={styles.returnBtnText}>Devolver</Text>
-                </Pressable>
-              </View>
-            )}
-          />
+
+          <TouchableOpacity style={styles.button} onPress={handleAddBook}>
+            <Text style={styles.buttonText}>Adicionar ao Acervo</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      <Modal
-        visible={!!selected}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSelected(null)}
+      <Text style={styles.infoText}>
+        💡 Dica: Se o livro não for encontrado, você pode cadastrá-lo manualmente.
+      </Text>
+      
+      <TouchableOpacity
+        style={[styles.button, styles.cancelButton]}
+        onPress={onClose}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => setSelected(null)}>
-          <View style={styles.sheet}>
-            {selected ? (
-              <>
-                <Text style={styles.sheetTitle}>{selected.title}</Text>
-                <Text style={styles.sheetAuthor}>{selected.author}</Text>
-                <View style={styles.sheetRow}>
-                  <Text style={styles.sheetLabel}>ISBN</Text>
-                  <Text style={styles.sheetValue}>{selected.isbn}</Text>
-                </View>
-                <View style={styles.sheetRow}>
-                  <Text style={styles.sheetLabel}>Edição</Text>
-                  <Text style={styles.sheetValue}>{selected.edition}</Text>
-                </View>
-                <View style={styles.sheetRow}>
-                  <Text style={styles.sheetLabel}>Páginas</Text>
-                  <Text style={styles.sheetValue}>{String(selected.pages)}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.pill,
-                    selected.available ? styles.pillOk : styles.pillNo,
-                    { alignSelf: "flex-start", marginTop: 12 },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.pillText,
-                      selected.available ? styles.pillTextOk : styles.pillTextNo,
-                    ]}
-                  >
-                    {selected.available ? "Disponível para empréstimo" : "Sem exemplar livre"}
-                  </Text>
-                </View>
-                <View style={styles.sheetActions}>
-                  <Pressable
-                    style={styles.ghostBtn}
-                    onPress={() => setSelected(null)}
-                  >
-                    <Text style={styles.ghostBtnText}>Fechar</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[
-                      styles.primaryBtn,
-                      !selected.available && styles.primaryBtnDisabled,
-                    ]}
-                    disabled={!selected.available}
-                    onPress={() => borrow(selected)}
-                  >
-                    <Text style={styles.primaryBtnText}>Pegar emprestado</Text>
-                  </Pressable>
-                </View>
-                <Text style={styles.hint}>
-                  Prazo sugerido: 14 dias (simulação local; depois ligue à API).
-                </Text>
-              </>
-            ) : null}
-          </View>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+        <Text style={styles.buttonText}>Voltar</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
-}
-
-export default function App() {
-  return (
-    <SafeAreaProvider>
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
+};
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: palette.bg },
-  header: { paddingHorizontal: 20, paddingBottom: 8 },
-  brand: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: palette.text,
-    letterSpacing: -0.5,
-  },
-  sub: { marginTop: 4, color: palette.muted, fontSize: 15 },
-  tabs: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  tab: {
+  container: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: palette.card,
-    borderWidth: 1,
-    borderColor: palette.line,
-  },
-  tabActive: {
-    borderColor: palette.accent,
-    backgroundColor: palette.accentSoft,
-  },
-  tabLabel: { fontSize: 14, fontWeight: "600", color: palette.muted },
-  tabLabelActive: { color: palette.accent },
-  badge: {
-    marginLeft: 4,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: palette.accent,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-  },
-  badgeText: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  panel: { flex: 1 },
-  searchWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: palette.card,
-    borderWidth: 1,
-    borderColor: palette.line,
-  },
-  search: { flex: 1, fontSize: 16, color: palette.text, paddingVertical: 0 },
-  listPad: { paddingHorizontal: 16, paddingBottom: 24 },
-  card: {
-    backgroundColor: palette.card,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: palette.line,
-  },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
+    padding: 20,
+    backgroundColor: '#F5F5F5'
   },
   title: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: "700",
-    color: palette.text,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#2c3e50'
   },
-  author: { marginTop: 6, fontSize: 15, color: palette.muted },
-  meta: { marginTop: 4, fontSize: 13, color: palette.muted },
-  pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 15,
+    marginBottom: 5,
+    color: '#34495e'
   },
-  pillOk: { backgroundColor: "#dcfce7" },
-  pillNo: { backgroundColor: "#ffedd5" },
-  pillText: { fontSize: 12, fontWeight: "600" },
-  pillTextOk: { color: palette.available },
-  pillTextNo: { color: palette.unavailable },
-  empty: { textAlign: "center", color: palette.muted, marginTop: 32 },
-  emptyBox: { alignItems: "center", paddingTop: 48, paddingHorizontal: 24 },
-  emptyTitle: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: "700",
-    color: palette.text,
-  },
-  emptySub: {
-    marginTop: 8,
-    textAlign: "center",
-    color: palette.muted,
-    lineHeight: 22,
-  },
-  loanCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: palette.card,
-    borderRadius: 14,
-    padding: 16,
+  input: {
+    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: palette.line,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 15,
+    fontSize: 16
   },
-  dates: { marginTop: 8, fontSize: 13, color: palette.muted },
-  returnBtn: {
-    backgroundColor: palette.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 10,
+  button: {
+    backgroundColor: '#3498db',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10
   },
-  returnBtnText: { color: "#fff", fontWeight: "700", fontSize: 14 },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    justifyContent: "flex-end",
+  cancelButton: {
+    backgroundColor: '#95a5a6',
+    marginTop: 10
   },
-  sheet: {
-    backgroundColor: palette.card,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 22,
-    paddingBottom: 28,
+  buttonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold'
   },
-  sheetTitle: { fontSize: 22, fontWeight: "800", color: palette.text },
-  sheetAuthor: { marginTop: 6, fontSize: 16, color: palette.muted },
-  sheetRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.line,
-    paddingBottom: 8,
-  },
-  sheetLabel: { color: palette.muted, fontSize: 14 },
-  sheetValue: { color: palette.text, fontSize: 14, fontWeight: "600" },
-  sheetActions: {
-    flexDirection: "row",
-    gap: 10,
+  bookInfo: {
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 8,
     marginTop: 20,
-  },
-  ghostBtn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: palette.line,
+    borderColor: '#DDD'
   },
-  ghostBtnText: { fontWeight: "700", color: palette.text },
-  primaryBtn: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: palette.accent,
+  bookTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 10
   },
-  primaryBtnDisabled: { opacity: 0.45 },
-  primaryBtnText: { fontWeight: "800", color: "#fff", fontSize: 15 },
-  hint: { marginTop: 12, fontSize: 12, color: palette.muted, lineHeight: 18 },
+  infoText: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#ecf0f1',
+    borderRadius: 8,
+    textAlign: 'center',
+    color: '#7f8c8d'
+  }
 });
