@@ -12,9 +12,20 @@ export type Book = {
   coverUrl?: string;
 };
 
+export type LoanRequest = {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  userId: string;
+  userName: string;
+  requestDate: Date;
+  status: 'pending' | 'approved' | 'rejected';
+};
+
 export type ActiveLoan = {
   id: string;
   bookId: string;
+  bookTitle: string;
   copyNumber: number;
   userId: string;
   userName: string;
@@ -22,6 +33,8 @@ export type ActiveLoan = {
   dueDate: Date;
   returnDate?: Date;
   status: 'active' | 'returned' | 'overdue';
+  isOverdue: boolean;
+  fine: number;
 };
 
 export type User = {
@@ -32,3 +45,5 @@ export type User = {
   registrationDate: Date;
   activeLoans: number;
 };
+
+export type AvailabilityFilter = 'all' | 'available' | 'unavailable';
