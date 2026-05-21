@@ -10,6 +10,8 @@ export type Book = {
   location: string;
   category: string;
   coverUrl?: string;
+  pageCount?: number;
+  summary?: string;
 };
 
 export type LoanRequest = {
@@ -41,9 +43,17 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  phone: string;
-  registrationDate: Date;
-  activeLoans: number;
+  phone?: string;
+  registrationDate?: Date;
+  activeLoans?: number;
+};
+
+export type AppRole = 'admin' | 'librarian' | 'user';
+
+export type UserProfile = {
+  nickname: string;
+  photoUri?: string;
+  nextNicknameChangeAt?: string;
 };
 
 export type AvailabilityFilter = 'all' | 'available' | 'unavailable';

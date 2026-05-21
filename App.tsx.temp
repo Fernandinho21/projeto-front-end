@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  StyleSheet,
-  Text,
   View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { AuthScreen } from './src/screens/Auth/AuthScreen';
 import { HomeScreen } from './src/screens/Home/HomeScreen';
-import { LibrarianApp } from './src/screens/Librarian/LibrarianApp';
 import { UserApp } from './src/screens/User/UserApp';
-import { AppRole, User } from './src/types';
+import { LibrarianApp } from './src/screens/Librarian/LibrarianApp';
+import { User } from './src/types';
+
+type AppRole = 'admin' | 'librarian' | 'user' | null;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
+  const [role, setRole] = useState<AppRole>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 350);
+    // Simula verificação de autenticação
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,28 +42,29 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563eb" />
-          <Text style={styles.loadingText}>Carregando biblioteca...</Text>
+          <ActivityIndicator size="large" color="#0066cc" />
+          <Text style={styles.loadingText}>Carregando...</Text>
         </View>
-        <StatusBar style="dark" />
+        <StatusBar barStyle="dark-content" />
       </SafeAreaView>
     );
   }
 
-  if (!user || !role) {
+  if (!user) {
     return (
       <>
         <AuthScreen onLogin={handleLogin} />
-        <StatusBar style="dark" />
+        <StatusBar barStyle="dark-content" />
       </>
     );
   }
 
+  // Renderiza a aplicação de acordo com o papel do usuário
   if (role === 'admin') {
     return (
       <>
         <HomeScreen user={user} onLogout={handleLogout} />
-        <StatusBar style="light" />
+        <StatusBar barStyle="dark-content" />
       </>
     );
   }
@@ -67,7 +73,7 @@ export default function App() {
     return (
       <>
         <LibrarianApp user={user} onLogout={handleLogout} />
-        <StatusBar style="dark" />
+        <StatusBar barStyle="dark-content" />
       </>
     );
   }
@@ -75,7 +81,7 @@ export default function App() {
   return (
     <>
       <UserApp user={user} onLogout={handleLogout} />
-      <StatusBar style="dark" />
+      <StatusBar barStyle="dark-content" />
     </>
   );
 }
@@ -83,16 +89,16 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     marginTop: 12,
-    color: '#475569',
     fontSize: 16,
+    color: '#666',
   },
 });
