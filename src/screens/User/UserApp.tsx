@@ -270,7 +270,7 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
           <Text style={styles.logoutButtonText}>
-            <Ionicons name="exit-outline" size={25} color="#000" />
+            <Ionicons name="exit-outline" size={25} color="#fff" />
           </Text>
         </TouchableOpacity>
       </View>

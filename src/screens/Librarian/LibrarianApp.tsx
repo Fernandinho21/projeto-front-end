@@ -261,7 +261,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
           </View>
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutButtonText}>Sair</Text>
+          <Text style={styles.logoutButtonText}>
+            <Ionicons name="exit-outline" size={25} color="#fff" />
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -613,9 +615,9 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#ff4444',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   logoutButtonText: {
     color: '#fff',
