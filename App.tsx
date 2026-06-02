@@ -8,31 +8,36 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { AuthScreen } from './src/screens/Auth/AuthScreen';
+import { RegisterScreen } from './src/screens/Auth/Registerscreen';
 import { HomeScreen } from './src/screens/Home/HomeScreen';
 import { LibrarianApp } from './src/screens/Librarian/LibrarianApp';
 import { UserApp } from './src/screens/User/UserApp';
 import { AppRole, User } from './src/types';
-
+ 
+type Screen = 'auth' | 'register';
+ 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [screen, setScreen] = useState<Screen>('auth');
+ 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 350);
     return () => clearTimeout(timer);
   }, []);
-
+ 
   const handleLogin = (userData: User, userRole: AppRole) => {
     setUser(userData);
     setRole(userRole);
   };
-
+ 
   const handleLogout = () => {
     setUser(null);
     setRole(null);
+    setScreen('auth');
   };
-
+ 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -44,16 +49,31 @@ export default function App() {
       </SafeAreaView>
     );
   }
-
+ 
   if (!user || !role) {
+    if (screen === 'register') {
+      return (
+        <>
+          <RegisterScreen
+            onBack={() => setScreen('auth')}
+            onRegistered={() => setScreen('auth')}
+          />
+          <StatusBar style="dark" />
+        </>
+      );
+    }
+ 
     return (
       <>
-        <AuthScreen onLogin={handleLogin} />
+        <AuthScreen
+          onLogin={handleLogin}
+          onNavigateToRegister={() => setScreen('register')}
+        />
         <StatusBar style="dark" />
       </>
     );
   }
-
+ 
   if (role === 'admin') {
     return (
       <>
@@ -62,7 +82,7 @@ export default function App() {
       </>
     );
   }
-
+ 
   if (role === 'librarian') {
     return (
       <>
@@ -71,7 +91,7 @@ export default function App() {
       </>
     );
   }
-
+ 
   return (
     <>
       <UserApp user={user} onLogout={handleLogout} />
@@ -79,7 +99,7 @@ export default function App() {
     </>
   );
 }
-
+ 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
