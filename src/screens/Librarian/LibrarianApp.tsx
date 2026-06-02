@@ -6,7 +6,6 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -16,6 +15,7 @@ import { initialBooks } from '../../data/mockBooks';
 import { Book, User, LoanRequest, ActiveLoan, UserProfile } from '../../types';
 import { ProfileMenu } from '../../components/ProfileMenu';
 import { loadUserProfile, saveUserProfile } from '../../services/profileStorage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Props {
   user: User;
@@ -251,12 +251,12 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
           <ProfileMenu
             name={user.name}
             email={user.email}
-            roleLabel="Bibliotecario"
+            roleLabel="Bibliotecário"
             profile={profile}
             onChangeProfile={handleProfileChange}
           />
           <View style={styles.headerTextBlock}>
-            <Text style={styles.welcomeText}>Bibliotecario</Text>
+            <Text style={styles.welcomeText}>Bibliotecário</Text>
             <Text style={styles.userEmail}>{profile.nickname}</Text>
           </View>
         </View>
@@ -273,19 +273,20 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
           ]}
           onPress={() => setActiveTab('requests')}
         >
-          <View style={styles.navButtonContent}>
+          
             <Ionicons
               name="clipboard-outline"
               size={16}
               color={activeTab === 'requests' ? '#ffffff' : '#666666'}
             />
+          <View style={styles.navButtonContent}> 
             <Text
               style={[
                 styles.navButtonText,
                 activeTab === 'requests' && styles.activeNavButtonText,
               ]}
             >
-              Requisicoes
+              Requisições
             </Text>
             {pendingRequests.length > 0 && (
               <View style={styles.badge}>
@@ -299,19 +300,20 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
           style={[styles.navButton, activeTab === 'loans' && styles.activeNavButton]}
           onPress={() => setActiveTab('loans')}
         >
-          <View style={styles.navButtonContent}>
+          
             <Ionicons
-              name="albums-outline"
+              name="receipt-outline"
               size={16}
               color={activeTab === 'loans' ? '#ffffff' : '#666666'}
             />
+          <View style={styles.navButtonContent}>
             <Text
               style={[
                 styles.navButtonText,
                 activeTab === 'loans' && styles.activeNavButtonText,
               ]}
             >
-              Alugueis
+              Empréstimos
             </Text>
             {activeLoans.filter(l => l.isOverdue).length > 0 && (
               <View style={[styles.badge, styles.alertBadge]}>
@@ -350,7 +352,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
         <ScrollView style={styles.content}>
           {pendingRequests.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>✅</Text>
+              <Text style={styles.emptyStateIcon}>
+                <Ionicons name="happy-outline" size={48} color="#4caf50" />
+              </Text>
               <Text style={styles.emptyStateText}>
                 Nenhuma requisição pendente
               </Text>
@@ -382,7 +386,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
                       {isProcessing ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Text style={styles.approveButtonText}>✓</Text>
+                        <Text style={styles.approveButtonText}>
+                          <Ionicons name="checkmark-outline" size={22} color="#fff" />
+                        </Text>
                       )}
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -393,7 +399,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
                       {isProcessing ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Text style={styles.rejectButtonText}>✕</Text>
+                        <Text style={styles.rejectButtonText}>
+                          <Ionicons name="close-outline" size={25} color="#fff" />
+                        </Text>
                       )}
                     </TouchableOpacity>
                   </View>
@@ -472,7 +480,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
                           onPress={() => handleRenewLoan(loan)}
                           disabled={isProcessing}
                         >
-                          <Text style={styles.actionButtonText}>🔄</Text>
+                          <Text style={styles.actionButtonText}>
+                            <Ionicons name="repeat-outline" size={25} color="#fff" />
+                          </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[
@@ -482,7 +492,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
                           onPress={() => handleProcessReturn(loan)}
                           disabled={isProcessing}
                         >
-                          <Text style={styles.actionButtonText}>✓</Text>
+                          <Text style={styles.actionButtonText}>
+                            <Ionicons name="checkmark-done-outline" size={25} color="#fff" />
+                          </Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -635,7 +647,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 1,
   },
   navButtonText: {
     fontSize: 12,
@@ -652,7 +664,7 @@ const styles = StyleSheet.create({
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 6,
+    marginLeft: 3,
   },
   alertBadge: {
     backgroundColor: '#ff6b6b',
@@ -817,17 +829,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
-    backgroundColor: '#f0f7ff',
-    width: 36,
-    height: 36,
+    backgroundColor: '#3c96f0',
+    width: 40,
+    height: 40,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#0066cc',
+    borderColor: '#3c96f0',
   },
   returnActionButton: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#4caf50',
     borderColor: '#4caf50',
   },
   actionButtonText: {

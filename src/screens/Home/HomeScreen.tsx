@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
 import { initialBooks } from '../../data/mockBooks';
 import { AddBookScreen } from '../Admin/AddBookScreen';
 import { Book, User } from '../../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   user: User;

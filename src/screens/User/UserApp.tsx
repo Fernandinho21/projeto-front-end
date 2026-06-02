@@ -7,7 +7,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   Alert,
 } from 'react-native';
@@ -24,6 +23,7 @@ import {
 import { BookDetailScreen } from '../Admin/BookDetailScreen';
 import { ProfileMenu } from '../../components/ProfileMenu';
 import { loadUserProfile, saveUserProfile } from '../../services/profileStorage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Props {
   user: User;
@@ -269,7 +269,9 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
           </View>
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutButtonText}>Sair</Text>
+          <Text style={styles.logoutButtonText}>
+            <Ionicons name="exit-outline" size={25} color="#000" />
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -289,7 +291,7 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
               activeTab === 'catalog' && styles.activeNavButtonText,
             ]}
           >
-            Catalogo
+            Catálogo
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -333,12 +335,26 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
       {activeTab === 'catalog' && (
         <ScrollView style={styles.content}>
           <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="🔍 Buscar por título ou autor..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+          
+            <View style={styles.searchBarWrapper}>
+      
+
+                <Ionicons 
+                  name="search" 
+                  size={20} 
+                  color="#888" 
+                  style={styles.searchIcon} 
+                />
+                
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Buscar por título ou autor..." /* Sem o emoji aqui */
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholderTextColor="#888" /* Garante uma cor amigável para o texto oculto */
+                />
+                
+            </View>
           </View>
 
           <View style={styles.filterContainer}>
@@ -605,10 +621,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    marginTop: 5,
   },
   headerIdentity: {
     flex: 1,
@@ -631,13 +648,12 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#ff4444',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
   },
   logoutButtonText: {
     color: '#fff',
-    fontSize: 12,
     fontWeight: '600',
   },
   navigation: {
@@ -675,17 +691,13 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   searchContainer: {
-    paddingHorizontal: 8,
-    paddingBottom: 8,
+    padding: 10,
   },
   searchInput: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    flex: 1, // Faz o campo de texto ocupar todo o espaço restante
+    height: 40,
+    color: '#333',
+    fontSize: 16,
   },
   filterContainer: {
     flexDirection: 'row',
@@ -972,4 +984,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchBarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0', // Cor de fundo da barra de busca
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    paddingHorizontal: 10,
+  },
+
 });

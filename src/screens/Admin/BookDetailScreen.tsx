@@ -5,12 +5,12 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Book, ActiveLoan } from '../../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Props {
   book: Book;
@@ -32,12 +32,12 @@ export const BookDetailScreen: React.FC<Props> = ({
 
   const handleBorrow = async () => {
     if (!onBorrow) {
-      Alert.alert('Erro', 'Solicitacao nao disponivel');
+      Alert.alert('Erro', 'Solicitação nao disponível');
       return;
     }
 
     if (book.availableCopies <= 0) {
-      Alert.alert('Indisponivel', 'Este livro nao esta disponivel no momento.');
+      Alert.alert('Indisponível', 'Este livro não está disponível no momento.');
       return;
     }
 

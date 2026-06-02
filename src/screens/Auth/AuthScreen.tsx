@@ -3,7 +3,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppRole, User } from '../../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   onLogin: (user: User, role: AppRole) => void;
@@ -44,10 +44,10 @@ const accounts: LoginAccount[] = [
     role: 'librarian',
     code: 'BIB01',
     password: '456123',
-    name: 'Bibliotecario',
+    name: 'Bibliotecário',
     email: 'bib01@biblioteca.local',
-    title: 'Bibliotecario',
-    description: 'Aprovar pedidos, controlar devolucoes e organizar o acervo.',
+    title: 'Bibliotecário',
+    description: 'Aprovar pedidos, controlar devoluções e organizar o acervo.',
     icon: 'library-outline',
   },
   {
@@ -118,15 +118,11 @@ export const AuthScreen: React.FC<Props> = ({ onLogin }) => {
         >
           <View style={styles.hero}>
             <View style={styles.logoBubble}>
-              <Ionicons name="library" size={34} color="#0f172a" />
+              <Ionicons name="library" size={40} color="#0f172a" />
             </View>
             <View style={styles.heroText}>
               <Text style={styles.kicker}>Biblioteca Mobile</Text>
-              <Text style={styles.title}>Escolha sua chave de entrada</Text>
-              <Text style={styles.subtitle}>
-                Cada perfil tem login e senha proprios. Entre para solicitar,
-                aprovar ou organizar livros.
-              </Text>
+              <Text style={styles.title}>Selecione seu perfil.</Text>
             </View>
           </View>
 
@@ -181,7 +177,6 @@ export const AuthScreen: React.FC<Props> = ({ onLogin }) => {
           </View>
 
           <View style={styles.loginPanel}>
-            <Text style={styles.panelTitle}>Credenciais obrigatorias</Text>
             <Text style={styles.label}>Login</Text>
             <TextInput
               style={styles.input}
@@ -252,47 +247,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 14,
+    flexDirection: 'row',    
+    alignItems: 'center',     
+    paddingHorizontal: 20,    
+    paddingVertical: 15,      
+    backgroundColor: '#ffffff', 
+    borderRadius: 15,
+    marginBottom: 10,          
   },
   logoBubble: {
-    width: 72,
-    height: 72,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#facc15',
-    borderWidth: 3,
-    borderColor: '#0f172a',
+    width: 70,                
+    height: 70,               
+    borderRadius: 15,         
+    backgroundColor: '#f8fafc', 
+    alignItems: 'center',     
+    justifyContent: 'center',  
+    marginRight: 15,          
   },
   heroText: {
-    flex: 1,
+    flex: 1,                  
+    justifyContent: 'center', 
   },
   kicker: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#2563eb',
-    fontSize: 13,
-    fontWeight: '800',
     textTransform: 'uppercase',
+    marginBottom: 2,
   },
   title: {
-    marginTop: 6,
+    fontSize: 20,
+    fontWeight: '700',
     color: '#0f172a',
-    fontSize: 28,
-    fontWeight: '900',
+    marginBottom: 4,
   },
   subtitle: {
-    marginTop: 8,
-    color: '#475569',
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    color: '#64748b',
   },
   label: {
     color: '#1e293b',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
     marginBottom: 8,
+    marginLeft: 4,
   },
   roles: {
     gap: 10,
