@@ -12,7 +12,9 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { initialBooks, CATALOG_SECTIONS } from '../../data/mockBooks';
+import { CATALOG_SECTIONS } from '../../data/mockBooks';
+import { bookStorageService } from '../../services/Bookstorageservice';
+import { loanRequestService } from '../../services/Loanrequestservice';
 import {
   Book,
   AvailabilityFilter,
@@ -42,10 +44,11 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('all');
-  const [books, setBooks] = useState<Book[]>(initialBooks);
+  const [books, setBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [showBookDetail, setShowBookDetail] = useState(false);
   const [rentalRequests, setRentalRequests] = useState<LoanRequest[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
   const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([]);
 
   const startOfDay = (date: Date) => {
@@ -84,9 +87,35 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
     return filtered;
   }, [books, searchQuery, availabilityFilter]);
 
+  const dynamicSections = useMemo(() => {
+    if (books.length === 0) return [];
+    const available = books.filter(b => b.availableCopies > 0);
+    const categories = [...new Set(books.map(b => b.category).filter(Boolean))];
+    const sections: { title: string; data: Book[] }[] = [];
+    if (available.length > 0) sections.push({ title: "Disponíveis", data: available.slice(0, 10) });
+    categories.forEach(cat => {
+      const catBooks = books.filter(b => b.category === cat);
+      if (catBooks.length > 0) sections.push({ title: cat, data: catBooks });
+    });
+    return sections;
+  }, [books]);
+
   useEffect(() => {
     loadUserProfile(user.id, user.name).then(setProfile);
   }, [user.id, user.name]);
+
+  useEffect(() => {
+    Promise.all([
+      bookStorageService.getAll(),
+      loanRequestService.getRequestsByUser(user.id),
+      loanRequestService.getLoansByUser(user.id),
+    ]).then(([loadedBooks, loadedRequests, loadedLoans]) => {
+      setBooks(loadedBooks);
+      setRentalRequests(loadedRequests);
+      setActiveLoans(loadedLoans);
+      setLoadingData(false);
+    });
+  }, [user.id]);
 
   const handleProfileChange = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
@@ -112,19 +141,18 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Solicitar',
-          onPress: () => {
-            setRentalRequests((currentRequests) => [
-              ...currentRequests,
-              {
-                id: `request_${Date.now()}`,
-                bookId: book.id,
-                bookTitle: book.title,
-                userId: user.id,
-                userName: profile.nickname,
-                requestDate: new Date(),
-                status: 'pending',
-              },
-            ]);
+          onPress: async () => {
+            const newRequest: LoanRequest = {
+              id: `request_${Date.now()}`,
+              bookId: book.id,
+              bookTitle: book.title,
+              userId: user.id,
+              userName: profile.nickname,
+              requestDate: new Date(),
+              status: 'pending',
+            };
+            const updated = await loanRequestService.addRequest(newRequest);
+            setRentalRequests(updated.filter(r => r.userId === user.id));
             Alert.alert('Pedido enviado', 'Sua solicitacao foi enviada para analise.');
             setShowBookDetail(false);
           },
@@ -196,50 +224,37 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
       year: 'numeric',
     });
 
-  const renderCatalogSection = ({ item }: { item: any }) => {
-    const sectionBooks = books
-      .filter(item.match)
-      .slice(0, item.limit || undefined);
-
-    if (sectionBooks.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{item.title}</Text>
-        <FlatList
-          data={sectionBooks}
-          renderItem={({ item: book }) => (
-            <TouchableOpacity
-              style={styles.bookCard}
-              onPress={() => {
-                setSelectedBook(book);
-                setShowBookDetail(true);
-              }}
-            >
-              {book.coverUrl && (
-                <Image source={{ uri: book.coverUrl }} style={styles.bookCover} />
-              )}
-              <View style={styles.bookInfo}>
-                <Text style={styles.bookTitle} numberOfLines={2}>
-                  {book.title}
-                </Text>
-                <Text style={styles.bookAuthor} numberOfLines={1}>
-                  {book.author}
-                </Text>
-                <Text style={styles.bookAvailability}>
-                  {book.availableCopies > 0
-                    ? `${book.availableCopies} disponível(is)`
-                    : 'Indisponível'}
-                </Text>
+  const renderDynamicSection = ({ item }: { item: { title: string; data: Book[] } }) => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{item.title}</Text>
+      <FlatList
+        data={item.data}
+        renderItem={({ item: book }) => (
+          <TouchableOpacity
+            style={styles.bookCard}
+            onPress={() => { setSelectedBook(book); setShowBookDetail(true); }}
+          >
+            {book.coverUrl ? (
+              <Image source={{ uri: book.coverUrl }} style={styles.bookCover} />
+            ) : (
+              <View style={[styles.bookCover, { backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', padding: 6 }]}>
+                <Text style={{ color: '#64748b', fontSize: 10, fontWeight: '700', textAlign: 'center' }} numberOfLines={3}>{book.title}</Text>
               </View>
-            </TouchableOpacity>
-          )}
-          keyExtractor={item => item.id}
-          scrollEnabled={false}
-        />
-      </View>
-    );
-  };
+            )}
+            <View style={styles.bookInfo}>
+              <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
+              <Text style={styles.bookAuthor} numberOfLines={1}>{book.author}</Text>
+              <Text style={styles.bookAvailability}>
+                {book.availableCopies > 0 ? `${book.availableCopies} disponível(is)` : 'Indisponível'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        keyExtractor={b => b.id}
+        scrollEnabled={false}
+      />
+    </View>
+  );
 
   if (showBookDetail && selectedBook) {
     return (
@@ -404,10 +419,16 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
                 scrollEnabled={false}
               />
             </View>
+          ) : books.length === 0 ? (
+            <View style={{ alignItems: 'center', padding: 40 }}>
+              <Text style={{ color: '#94a3b8', fontSize: 15, textAlign: 'center' }}>
+                {'Nenhum livro no acervo ainda.\nAguarde o administrador adicionar livros.'}
+              </Text>
+            </View>
           ) : (
             <FlatList
-              data={CATALOG_SECTIONS}
-              renderItem={renderCatalogSection}
+              data={dynamicSections}
+              renderItem={renderDynamicSection}
               keyExtractor={item => item.title}
               scrollEnabled={false}
             />

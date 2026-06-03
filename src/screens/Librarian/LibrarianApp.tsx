@@ -12,7 +12,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { initialBooks } from '../../data/mockBooks';
+import { bookStorageService } from '../../services/Bookstorageservice';
+import { loanRequestService } from '../../services/Loanrequestservice';
 import { Book, User, LoanRequest, ActiveLoan, UserProfile } from '../../types';
 import { ProfileMenu } from '../../components/ProfileMenu';
 import { loadUserProfile, saveUserProfile } from '../../services/profileStorage';
@@ -29,56 +30,9 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
   const [profile, setProfile] = useState<UserProfile>({
     nickname: user.name,
   });
-  const [books, setBooks] = useState<Book[]>(initialBooks);
-  const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([
-    {
-      id: 'req1',
-      bookId: '1',
-      bookTitle: 'Dom Casmurro',
-      userId: 'u2',
-      userName: 'Ana Silva',
-      requestDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      status: 'pending',
-    },
-    {
-      id: 'req2',
-      bookId: '5',
-      bookTitle: '1984',
-      userId: 'u3',
-      userName: 'Carlos Santos',
-      requestDate: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      status: 'pending',
-    },
-  ]);
-
-  const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([
-    {
-      id: 'loan1',
-      bookId: '2',
-      bookTitle: 'Capitães da Areia',
-      copyNumber: 1,
-      userId: 'u4',
-      userName: 'Maria Santos',
-      loanDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      dueDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
-      status: 'active',
-      isOverdue: false,
-      fine: 0,
-    },
-    {
-      id: 'loan2',
-      bookId: '7',
-      bookTitle: 'Cem Anos de Solidão',
-      copyNumber: 1,
-      userId: 'u5',
-      userName: 'João Costa',
-      loanDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
-      dueDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-      status: 'overdue',
-      isOverdue: true,
-      fine: 6.0,
-    },
-  ]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loanRequests, setLoanRequests] = useState<LoanRequest[]>([]);
+  const [activeLoans, setActiveLoans] = useState<ActiveLoan[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -86,6 +40,18 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
   useEffect(() => {
     loadUserProfile(user.id, user.name).then(setProfile);
   }, [user.id, user.name]);
+
+  useEffect(() => {
+    Promise.all([
+      bookStorageService.getAll(),
+      loanRequestService.getAllRequests(),
+      loanRequestService.getAllLoans(),
+    ]).then(([loadedBooks, loadedRequests, loadedLoans]) => {
+      setBooks(loadedBooks);
+      setLoanRequests(loadedRequests);
+      setActiveLoans(loadedLoans);
+    });
+  }, []);
 
   const handleProfileChange = (nextProfile: UserProfile) => {
     setProfile(nextProfile);
@@ -135,20 +101,16 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
         fine: 0,
       };
 
-      setActiveLoans([...activeLoans, newLoan]);
-      setLoanRequests(
-        loanRequests.map(r =>
-          r.id === request.id ? { ...r, status: 'approved' } : r
-        )
-      );
+      const updatedLoans = await loanRequestService.addLoan(newLoan);
+      const updatedRequests = await loanRequestService.updateRequest(request.id, 'approved');
+      setActiveLoans(updatedLoans);
+      setLoanRequests(updatedRequests);
 
-      setBooks(
-        books.map(b =>
-          b.id === request.bookId && b.availableCopies > 0
-            ? { ...b, availableCopies: b.availableCopies - 1 }
-            : b
-        )
-      );
+      const updatedBook = books.find(b => b.id === request.bookId && b.availableCopies > 0);
+      if (updatedBook) {
+        const newBooks = await bookStorageService.updateBook({ ...updatedBook, availableCopies: updatedBook.availableCopies - 1 });
+        setBooks(newBooks);
+      }
 
       Alert.alert('Sucesso', `Empréstimo aprovado para ${request.userName}`);
     } finally {
@@ -162,11 +124,8 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      setLoanRequests(
-        loanRequests.map(r =>
-          r.id === request.id ? { ...r, status: 'rejected' } : r
-        )
-      );
+      const updatedRequests = await loanRequestService.updateRequest(request.id, 'rejected');
+      setLoanRequests(updatedRequests);
 
       Alert.alert('Feito', `Requisição rejeitada para ${request.userName}`);
     } finally {
@@ -188,21 +147,14 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
             try {
               await new Promise(resolve => setTimeout(resolve, 500));
 
-              setActiveLoans(
-                activeLoans.map(l =>
-                  l.id === loan.id
-                    ? { ...l, status: 'returned', returnDate: new Date() }
-                    : l
-                )
-              );
+              const updatedLoans = await loanRequestService.updateLoan(loan.id, { status: 'returned', returnDate: new Date() });
+              setActiveLoans(updatedLoans);
 
-              setBooks(
-                books.map(b =>
-                  b.id === loan.bookId
-                    ? { ...b, availableCopies: b.availableCopies + 1 }
-                    : b
-                )
-              );
+              const returnedBook = books.find(b => b.id === loan.bookId);
+              if (returnedBook) {
+                const newBooks = await bookStorageService.updateBook({ ...returnedBook, availableCopies: returnedBook.availableCopies + 1 });
+                setBooks(newBooks);
+              }
 
               Alert.alert('Sucesso', 'Devolução registrada com sucesso!');
             } finally {
