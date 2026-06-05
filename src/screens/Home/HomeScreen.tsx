@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,10 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { initialBooks } from '../../data/mockBooks';
 import { AddBookScreen } from '../Admin/AddBookScreen';
+import { bookStorageService } from '../../services/Bookstorageservice';
 import { Book, User } from '../../types';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   user: User;
@@ -22,10 +23,18 @@ type Props = {
 type AdminTab = 'dashboard' | 'inventory';
 
 export const HomeScreen: React.FC<Props> = ({ user, onLogout }) => {
-  const [books, setBooks] = useState<Book[]>(initialBooks);
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
-  const [search, setSearch] = useState('');
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const [search, setSearch] = useState("");
   const [isAddingBook, setIsAddingBook] = useState(false);
+
+  useEffect(() => {
+    bookStorageService.getAll().then((stored) => {
+      setBooks(stored);
+      setLoadingBooks(false);
+    });
+  }, []);
 
   const filteredBooks = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -51,32 +60,9 @@ export const HomeScreen: React.FC<Props> = ({ user, onLogout }) => {
     return { titles: books.length, totalCopies, availableCopies, unavailableTitles };
   }, [books]);
 
-  const handleAddBook = (newBook: Book) => {
-    setBooks((currentBooks) => {
-      const existingBook = currentBooks.find((book) => book.isbn === newBook.isbn);
-
-      if (!existingBook) {
-        return [
-          ...currentBooks,
-          {
-            ...newBook,
-            coverUrl:
-              newBook.coverUrl ??
-              `https://picsum.photos/200/300?random=${newBook.id}`,
-          },
-        ];
-      }
-
-      return currentBooks.map((book) =>
-        book.id === existingBook.id
-          ? {
-              ...book,
-              totalCopies: book.totalCopies + newBook.totalCopies,
-              availableCopies: book.availableCopies + newBook.availableCopies,
-            }
-          : book
-      );
-    });
+  const handleAddBook = async (newBook: Book) => {
+    const updatedBooks = await bookStorageService.addBook(newBook);
+    setBooks(updatedBooks);
   };
 
   const renderBook = ({ item }: { item: Book }) => (
@@ -106,6 +92,18 @@ export const HomeScreen: React.FC<Props> = ({ user, onLogout }) => {
       </View>
     </View>
   );
+
+
+  if (loadingBooks) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={{ marginTop: 12, color: '#475569' }}>Carregando acervo...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (isAddingBook) {
     return (
