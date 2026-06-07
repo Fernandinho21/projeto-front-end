@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Book } from '../types'; // adjust path as needed
+import { Book } from '../../types'; // adjust path as needed
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

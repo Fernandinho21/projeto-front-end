@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppRole } from '../../types';
 import { userService } from '../../services/userservice';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 type Props = {
   onBack: () => void;
   onRegistered: () => void;
@@ -54,6 +53,23 @@ export const RegisterScreen: React.FC<Props> = ({ onBack, onRegistered }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  const formatPhoneNumber = (text: string): string => {
+    // Remove tudo o que não for número
+    const cleaned = text.replace(/\D/g, '');
+    
+    // Limita a string de números limpos a no máximo 11 caracteres
+    const limited = cleaned.slice(0, 11);
+
+    // Formatação progressiva baseada no que o usuário digita
+    if (limited.length <= 2) {
+      return limited.length > 0 ? `(${limited}` : limited;
+    }
+    if (limited.length <= 7) {
+      return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+    }
+    return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+  };
 
   const handleRegister = async () => {
     setSuccessMessage('');
@@ -109,7 +125,8 @@ export const RegisterScreen: React.FC<Props> = ({ onBack, onRegistered }) => {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 40}
       >
         <ScrollView
           contentContainerStyle={styles.container}
@@ -210,10 +227,11 @@ export const RegisterScreen: React.FC<Props> = ({ onBack, onRegistered }) => {
             <TextInput
               style={styles.input}
               value={phone}
-              onChangeText={setPhone}
-              placeholder="(00) 00000-0000"
+              onChangeText={(text) => setPhone(formatPhoneNumber(text))}
+              placeholder="(00) 90000-0000"
               placeholderTextColor="#94a3b8"
-              keyboardType="phone-pad"
+              keyboardType="numeric"
+              maxLength={15} // Limita o tamanho do campo formatado: (11) 99999-9999
             />
 
             <Text style={styles.sectionTitle}>Credenciais de acesso</Text>

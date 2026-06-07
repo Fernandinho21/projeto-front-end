@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ActiveLoan, LoanRequest } from '../types';
-import { styles } from './styles/UserLoans.styles';
+import { ActiveLoan, LoanRequest } from '../../types';
+import { styles } from '../styles/UserLoans.styles';
 
 interface Props {
   rentalRequests: LoanRequest[];

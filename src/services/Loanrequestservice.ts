@@ -30,7 +30,8 @@ export const loanRequestService = {
 
   async getRequestsByUser(userId: string): Promise<LoanRequest[]> {
     const all = await this.getAllRequests();
-    return all.filter(r => r.userId === userId);
+    if (!userId) return [];
+    return all.filter(r => r.userId && r.userId.toLowerCase() === userId.toLowerCase());
   },
 
   async addRequest(request: LoanRequest): Promise<LoanRequest[]> {
@@ -70,7 +71,8 @@ export const loanRequestService = {
 
   async getLoansByUser(userId: string): Promise<ActiveLoan[]> {
     const all = await this.getAllLoans();
-    return all.filter(l => l.userId === userId);
+    if (!userId) return [];
+    return all.filter(l => l.userId && l.userId.toLowerCase() === userId.toLowerCase());
   },
 
   async addLoan(loan: ActiveLoan): Promise<ActiveLoan[]> {

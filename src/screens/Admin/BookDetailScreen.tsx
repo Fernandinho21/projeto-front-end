@@ -5,12 +5,13 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Book, ActiveLoan } from '../../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   book: Book;
@@ -60,15 +61,14 @@ export const BookDetailScreen: React.FC<Props> = ({
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Voltar</Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={onClose}>
+              <Ionicons name="arrow-back" size={22} color="#0f172a" />
+            </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalhes do Livro</Text>
         <View style={styles.spacer} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Capa do Livro */}
         <View style={styles.coverSection}>
           {book.coverUrl ? (
             <Image source={{ uri: book.coverUrl }} style={styles.coverImage} />
@@ -79,7 +79,6 @@ export const BookDetailScreen: React.FC<Props> = ({
           )}
         </View>
 
-        {/* Informações Básicas */}
         <View style={styles.infoSection}>
           <Text style={styles.bookTitle}>{book.title}</Text>
           <Text style={styles.bookAuthor}>por {book.author}</Text>

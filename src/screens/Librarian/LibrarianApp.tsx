@@ -6,7 +6,6 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -15,8 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { bookStorageService } from '../../services/Bookstorageservice';
 import { loanRequestService } from '../../services/Loanrequestservice';
 import { Book, User, LoanRequest, ActiveLoan, UserProfile } from '../../types';
-import { ProfileMenu } from '../../components/ProfileMenu';
+import { ProfileMenu } from '../../components/Lib/LibProfile';
 import { loadUserProfile, saveUserProfile } from '../../services/profileStorage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LibrarianHeader } from '../../components/Lib/LibHeader';
+import { LibrarianNavigation } from '../../components/Lib/LibNavBar';
+import { LibrarianRequestsTab } from '../../components/Lib/LibRequestsTab';
+import { LibrarianLoansTab } from '../../components/Lib/LibLoansTab';
+import { LibrarianInventoryTab } from '../../components/Lib/LibInventory';
 
 interface Props {
   user: User;
@@ -189,6 +194,12 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
 
   const pendingRequests = loanRequests.filter(r => r.status === 'pending');
   const processedRequests = loanRequests.filter(r => r.status !== 'pending');
+  const totalPendentes = pendingRequests.length;
+  //Contador de empréstimos atrasados e ativos
+  const loansEmAndamento = activeLoans.filter(l => l.status === 'active');
+  const totalLoansAtivos = loansEmAndamento.length;
+  const loansAtrasados = loansEmAndamento.filter(l => getDaysOverdue(l.dueDate) > 0);
+  const totalLoansAtrasados = loansAtrasados.length;
 
   const filteredBooks = books.filter(
     b =>
@@ -198,421 +209,53 @@ export const LibrarianApp: React.FC<Props> = ({ user, onLogout }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerIdentity}>
-          <ProfileMenu
-            name={user.name}
-            email={user.email}
-            roleLabel="Bibliotecario"
-            profile={profile}
-            onChangeProfile={handleProfileChange}
-          />
-          <View style={styles.headerTextBlock}>
-            <Text style={styles.welcomeText}>Bibliotecario</Text>
-            <Text style={styles.userEmail}>{profile.nickname}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutButtonText}>Sair</Text>
-        </TouchableOpacity>
-      </View>
+      <LibrarianHeader 
+        user={user}
+        profile={profile}
+        onLogout={onLogout}
+        onProfileChange={handleProfileChange}
+      />
 
-      <View style={styles.navigation}>
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            activeTab === 'requests' && styles.activeNavButton,
-          ]}
-          onPress={() => setActiveTab('requests')}
-        >
-          <View style={styles.navButtonContent}>
-            <Ionicons
-              name="clipboard-outline"
-              size={16}
-              color={activeTab === 'requests' ? '#ffffff' : '#666666'}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                activeTab === 'requests' && styles.activeNavButtonText,
-              ]}
-            >
-              Requisicoes
-            </Text>
-            {pendingRequests.length > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{pendingRequests.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.navButton, activeTab === 'loans' && styles.activeNavButton]}
-          onPress={() => setActiveTab('loans')}
-        >
-          <View style={styles.navButtonContent}>
-            <Ionicons
-              name="albums-outline"
-              size={16}
-              color={activeTab === 'loans' ? '#ffffff' : '#666666'}
-            />
-            <Text
-              style={[
-                styles.navButtonText,
-                activeTab === 'loans' && styles.activeNavButtonText,
-              ]}
-            >
-              Alugueis
-            </Text>
-            {activeLoans.filter(l => l.isOverdue).length > 0 && (
-              <View style={[styles.badge, styles.alertBadge]}>
-                <Text style={styles.badgeText}>
-                  {activeLoans.filter(l => l.isOverdue).length}
-                </Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            activeTab === 'inventory' && styles.activeNavButton,
-          ]}
-          onPress={() => setActiveTab('inventory')}
-        >
-          <Ionicons
-            name="cube-outline"
-            size={16}
-            color={activeTab === 'inventory' ? '#ffffff' : '#666666'}
-          />
-          <Text
-            style={[
-              styles.navButtonText,
-              activeTab === 'inventory' && styles.activeNavButtonText,
-            ]}
-          >
-            Acervo
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <LibrarianNavigation
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        pendingRequestsCount={totalPendentes}
+        overdueLoansCount={totalLoansAtrasados}
+      />
 
       {activeTab === 'requests' && (
-        <ScrollView style={styles.content}>
-          {pendingRequests.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>✅</Text>
-              <Text style={styles.emptyStateText}>
-                Nenhuma requisição pendente
-              </Text>
-            </View>
-          ) : (
-            <View>
-              <Text style={styles.sectionTitle}>
-                Requisições Pendentes ({pendingRequests.length})
-              </Text>
-              {pendingRequests.map(request => (
-                <View key={request.id} style={styles.requestCard}>
-                  <View style={styles.requestInfo}>
-                    <Text style={styles.requestBookTitle}>
-                      {request.bookTitle}
-                    </Text>
-                    <Text style={styles.requestUserName}>
-                      Solicitado por: {request.userName}
-                    </Text>
-                    <Text style={styles.requestDate}>
-                      {formatDate(request.requestDate)}
-                    </Text>
-                  </View>
-                  <View style={styles.requestActions}>
-                    <TouchableOpacity
-                      style={styles.approveButton}
-                      onPress={() => handleApproveRequest(request)}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={styles.approveButtonText}>✓</Text>
-                      )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.rejectButton}
-                      onPress={() => handleRejectRequest(request)}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={styles.rejectButtonText}>✕</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {processedRequests.length > 0 && (
-            <View style={styles.processedSection}>
-              <Text style={styles.sectionTitle}>Histórico</Text>
-              {processedRequests.map(request => (
-                <View
-                  key={request.id}
-                  style={[
-                    styles.historyCard,
-                    request.status === 'approved' && styles.approvedCard,
-                  ]}
-                >
-                  <Text style={styles.historyTitle}>{request.bookTitle}</Text>
-                  <Text style={styles.historyStatus}>
-                    {request.status === 'approved' ? '✓ Aprovada' : '✕ Rejeitada'}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </ScrollView>
+        <LibrarianRequestsTab
+          pendingRequests={pendingRequests}
+          processedRequests={processedRequests}
+          isProcessing={isProcessing}
+          formatDate={formatDate}
+          onApproveRequest={handleApproveRequest}
+          onRejectRequest={handleRejectRequest}
+        />
       )}
 
       {activeTab === 'loans' && (
-        <ScrollView style={styles.content}>
-          <View>
-            <Text style={styles.sectionTitle}>Empréstimos Ativos</Text>
-
-            {activeLoans.filter(l => l.status === 'active' || l.status === 'overdue').length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateIcon}>📚</Text>
-                <Text style={styles.emptyStateText}>
-                  Nenhum empréstimo ativo
-                </Text>
-              </View>
-            ) : (
-              activeLoans
-                .filter(l => l.status === 'active' || l.status === 'overdue')
-                .map(loan => {
-                  const daysOverdue = getDaysOverdue(loan.dueDate);
-                  const isOverdue = daysOverdue > 0;
-
-                  return (
-                    <View
-                      key={loan.id}
-                      style={[
-                        styles.loanCard,
-                        isOverdue && styles.overdueLoanCard,
-                      ]}
-                    >
-                      <View style={styles.loanInfo}>
-                        <Text style={styles.loanTitle}>{loan.bookTitle}</Text>
-                        <Text style={styles.loanUserName}>
-                          {loan.userName}
-                        </Text>
-                        <Text style={styles.loanDetails}>
-                          {formatDate(loan.loanDate)} - Vence: {formatDate(loan.dueDate)}
-                        </Text>
-                        {isOverdue && (
-                          <Text style={styles.overdueWarning}>
-                            ⚠️ Atrasado há {daysOverdue} dia(s) - Multa: R$
-                            {(daysOverdue * 1.0).toFixed(2)}
-                          </Text>
-                        )}
-                      </View>
-                      <View style={styles.loanActions}>
-                        <TouchableOpacity
-                          style={styles.actionButton}
-                          onPress={() => handleRenewLoan(loan)}
-                          disabled={isProcessing}
-                        >
-                          <Text style={styles.actionButtonText}>🔄</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[
-                            styles.actionButton,
-                            styles.returnActionButton,
-                          ]}
-                          onPress={() => handleProcessReturn(loan)}
-                          disabled={isProcessing}
-                        >
-                          <Text style={styles.actionButtonText}>✓</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })
-            )}
-          </View>
-
-          {activeLoans.filter(l => l.status === 'returned').length > 0 && (
-            <View style={styles.returnedSection}>
-              <Text style={styles.sectionTitle}>Histórico de Devoluções</Text>
-              {activeLoans
-                .filter(l => l.status === 'returned')
-                .map(loan => (
-                  <View key={loan.id} style={styles.historyCard}>
-                    <Text style={styles.historyTitle}>{loan.bookTitle}</Text>
-                    <Text style={styles.historySubtitle}>
-                      {loan.userName} - Devolvido em{' '}
-                      {formatDate(loan.returnDate || new Date())}
-                    </Text>
-                  </View>
-                ))}
-            </View>
-          )}
-        </ScrollView>
+        <LibrarianLoansTab
+          activeLoans={activeLoans}
+          isProcessing={isProcessing}
+          getDaysOverdue={getDaysOverdue}
+          formatDate={formatDate}
+          onRenewLoan={handleRenewLoan}
+          onProcessReturn={handleProcessReturn}
+        />
       )}
 
       {activeTab === 'inventory' && (
-        <ScrollView style={styles.content}>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="🔍 Buscar livro..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-
-          <Text style={styles.sectionTitle}>
-            Acervo ({filteredBooks.length} livro(s))
-          </Text>
-
-          {filteredBooks.map(book => (
-            <View key={book.id} style={styles.inventoryCard}>
-              <View style={styles.inventoryInfo}>
-                <Text style={styles.inventoryTitle}>{book.title}</Text>
-                <Text style={styles.inventoryAuthor}>{book.author}</Text>
-                <View style={styles.inventoryStats}>
-                  <View style={styles.inventoryStat}>
-                    <Text style={styles.inventoryStatLabel}>Total:</Text>
-                    <Text style={styles.inventoryStatValue}>
-                      {book.totalCopies}
-                    </Text>
-                  </View>
-                  <View style={styles.inventoryStat}>
-                    <Text style={styles.inventoryStatLabel}>Disponíveis:</Text>
-                    <Text
-                      style={[
-                        styles.inventoryStatValue,
-                        book.availableCopies === 0 &&
-                          styles.inventoryStatValueZero,
-                      ]}
-                    >
-                      {book.availableCopies}
-                    </Text>
-                  </View>
-                  <View style={styles.inventoryStat}>
-                    <Text style={styles.inventoryStatLabel}>Emprestados:</Text>
-                    <Text style={styles.inventoryStatValue}>
-                      {book.totalCopies - book.availableCopies}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+        <LibrarianInventoryTab books={books} />
       )}
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerIdentity: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTextBlock: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  welcomeText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  userEmail: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 4,
-  },
-  logoutButton: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  navigation: {
-    flexDirection: 'row',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  navButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    marginHorizontal: 4,
-    borderRadius: 6,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    gap: 3,
-  },
-  activeNavButton: {
-    backgroundColor: '#0066cc',
-  },
-  navButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  navButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
-  },
-  activeNavButtonText: {
-    color: '#fff',
-  },
-  badge: {
-    backgroundColor: '#4caf50',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 6,
-  },
-  alertBadge: {
-    backgroundColor: '#ff6b6b',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   content: {
     flex: 1,
@@ -769,17 +412,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
-    backgroundColor: '#f0f7ff',
-    width: 36,
-    height: 36,
+    backgroundColor: '#2083e7',
+    width: 40,
+    height: 40,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#0066cc',
+    borderColor: '#2083e7',
   },
   returnActionButton: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#4caf50',
     borderColor: '#4caf50',
   },
   actionButtonText: {

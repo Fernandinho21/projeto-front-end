@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { User, UserProfile, ActiveLoan } from '../types';
-import { styles } from './styles/UserProfile.styles';
+import { User, UserProfile, ActiveLoan } from '../../types';
+import { styles } from '../styles/UserProfile.styles';
 interface Props {
   user: User;
   profile: UserProfile;

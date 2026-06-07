@@ -6,9 +6,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { User, UserProfile } from '../types';
-import { ProfileMenu } from './ProfileMenu';
-import { styles } from './styles/UserHeader.styles';
+import { User, UserProfile } from '../../types';
+import { ProfileMenu } from '../Lib/LibProfile';
+import { styles } from '../styles/UserHeader.styles';
 
 type UserTab = 'catalog' | 'my-loans' | 'profile';
 

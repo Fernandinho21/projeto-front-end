@@ -90,11 +90,23 @@ export const userService = {
       }
 
       const stored = await AsyncStorage.getItem(USERS_KEY);
-      const saved: RegisteredUser[] = stored ? JSON.parse(stored) : [];
+      let saved: RegisteredUser[] = [];
+      
+      // PROTEÇÃO: Evita que o app trave se houver lixo ou dados inválidos salvos no celular
+      if (stored) {
+        try {
+          saved = JSON.parse(stored);
+          if (!Array.isArray(saved)) {
+            saved = [];
+          }
+        } catch {
+          saved = []; 
+        }
+      }
 
       const newUser: RegisteredUser = {
-        id: data.loginCode.toUpperCase(),
-        loginCode: data.loginCode.toUpperCase(),
+        id: data.loginCode.toUpperCase().trim(),
+        loginCode: data.loginCode.toUpperCase().trim(),
         password: data.password,
         name: data.name,
         email: data.email,
@@ -107,7 +119,9 @@ export const userService = {
       saved.push(newUser);
       await AsyncStorage.setItem(USERS_KEY, JSON.stringify(saved));
       return { success: true };
-    } catch {
+    } catch (error) {
+      // Isso vai te mostrar exatamente o que quebrou no terminal/log do Metro Bundler
+      console.error("Erro interno ao registrar usuário:", error);
       return { success: false, error: 'Erro ao cadastrar. Tente novamente.' };
     }
   },

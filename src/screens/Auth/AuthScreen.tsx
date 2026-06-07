@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppRole, User } from '../../types';
 import { userService } from '../../services/userservice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = {
   onLogin: (user: User, role: AppRole) => void;
@@ -35,8 +35,8 @@ const roleOptions: RoleOption[] = [
   },
   {
     role: 'librarian',
-    title: 'Bibliotecario',
-    description: 'Aprovar pedidos, controlar devolucoes e organizar o acervo.',
+    title: 'Bibliotecário',
+    description: 'Aprovar pedidos, controlar devoluções e organizar o acervo.',
     icon: 'library-outline',
   },
   {
@@ -93,7 +93,8 @@ export const AuthScreen: React.FC<Props> = ({ onLogin, onNavigateToRegister }) =
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.keyboard}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 20}
       >
         <ScrollView
           contentContainerStyle={styles.container}
@@ -102,15 +103,12 @@ export const AuthScreen: React.FC<Props> = ({ onLogin, onNavigateToRegister }) =
         >
           <View style={styles.hero}>
             <View style={styles.logoBubble}>
-              <Ionicons name="library" size={34} color="#0f172a" />
+              <Ionicons name="library" size={40} color="#0f172a" />
             </View>
             <View style={styles.heroText}>
               <Text style={styles.kicker}>Biblioteca Mobile</Text>
               <Text style={styles.title}>Escolha sua chave de entrada</Text>
-              <Text style={styles.subtitle}>
-                Cada perfil tem login e senha proprios. Entre para solicitar,
-                aprovar ou organizar livros.
-              </Text>
+              <Text style={styles.title}>Selecione seu perfil.</Text>
             </View>
           </View>
 
@@ -156,7 +154,7 @@ export const AuthScreen: React.FC<Props> = ({ onLogin, onNavigateToRegister }) =
           </View>
 
           <View style={styles.loginPanel}>
-            <Text style={styles.panelTitle}>Credenciais obrigatorias</Text>
+            <Text style={styles.panelTitle}>Credenciais obrigatórias</Text>
 
             <Text style={styles.label}>Login</Text>
             <TextInput
@@ -185,27 +183,27 @@ export const AuthScreen: React.FC<Props> = ({ onLogin, onNavigateToRegister }) =
               </View>
             )}
 
-            {selectedRole !== 'admin' && (
-              <TouchableOpacity
-                style={styles.helperButton}
-                onPress={onNavigateToRegister}
-              >
-                <Ionicons name="person-add-outline" size={16} color="#2563eb" />
-                <Text style={styles.helperButtonText}>Criar uma conta</Text>
-              </TouchableOpacity>
-            )}
 
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
               onPress={handleLogin}
               activeOpacity={0.9}
               disabled={loading}
-            >
+              >
               <Ionicons name="log-in-outline" size={20} color="#ffffff" />
               <Text style={styles.loginButtonText}>
                 {loading ? 'Entrando...' : 'Entrar'}
               </Text>
             </TouchableOpacity>
+              {selectedRole !== 'admin' && (
+                <TouchableOpacity
+                  style={styles.helperButton}
+                  onPress={onNavigateToRegister}
+                >
+                  <Ionicons name="person-add-outline" size={16} color="#2563eb" />
+                  <Text style={styles.helperButtonText}>Criar uma conta</Text>
+                </TouchableOpacity>
+              )}
           </View>
 
           <TouchableOpacity
@@ -221,7 +219,7 @@ export const AuthScreen: React.FC<Props> = ({ onLogin, onNavigateToRegister }) =
             }}
           >
             <Text style={styles.adminRevealText}>
-              {showAdmin ? 'Ocultar perfil administrativo' : 'Area interna'}
+              {showAdmin ? 'Ocultar perfil administrativo' : 'Revelar perfil administrativo'}
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -234,12 +232,45 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#f8fafc' },
   keyboard: { flex: 1 },
   container: { flexGrow: 1, padding: 20, justifyContent: 'center' },
-  hero: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 14 },
-  logoBubble: { width: 72, height: 72, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#facc15', borderWidth: 3, borderColor: '#0f172a' },
-  heroText: { flex: 1 },
-  kicker: { color: '#2563eb', fontSize: 13, fontWeight: '800', textTransform: 'uppercase' },
-  title: { marginTop: 6, color: '#0f172a', fontSize: 28, fontWeight: '900' },
-  subtitle: { marginTop: 8, color: '#475569', fontSize: 15, lineHeight: 22 },
+  hero: {
+    flexDirection: 'row',    
+    alignItems: 'center',     
+    paddingHorizontal: 20,    
+    paddingVertical: 15,      
+    backgroundColor: '#ffffff', 
+    borderRadius: 15,
+    marginBottom: 10,          
+  },
+  logoBubble: {
+    width: 70,                
+    height: 70,               
+    borderRadius: 15,         
+    backgroundColor: '#f8fafc', 
+    alignItems: 'center',     
+    justifyContent: 'center',  
+    marginRight: 15,          
+  },
+  heroText: {
+    flex: 1,                  
+    justifyContent: 'center', 
+  },
+  kicker: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2563eb',
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#64748b',
+  },
   label: { color: '#1e293b', fontSize: 14, fontWeight: '800', marginBottom: 8 },
   roles: { gap: 10, marginBottom: 14 },
   roleCard: { minHeight: 78, flexDirection: 'row', alignItems: 'center', borderRadius: 8, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#ffffff', padding: 12, gap: 10 },
@@ -256,7 +287,7 @@ const styles = StyleSheet.create({
   inputError: { borderColor: '#dc2626' },
   errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#dc2626', borderRadius: 8, padding: 12, marginBottom: 12 },
   errorText: { flex: 1, color: '#dc2626', fontSize: 13, fontWeight: '700', lineHeight: 18 },
-  helperButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, backgroundColor: '#eff6ff', marginBottom: 10 },
+  helperButton: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 8, backgroundColor: '#eff6ff', marginTop: 10 },
   helperButtonText: { color: '#2563eb', fontWeight: '800' },
   loginButton: { minHeight: 52, borderRadius: 8, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a' },
   loginButtonDisabled: { backgroundColor: '#475569' },
