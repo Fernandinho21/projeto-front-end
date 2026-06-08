@@ -7,8 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ActiveLoan } from '../../types'; // Ajuste o caminho dos tipos conforme seu projeto
-
+import { ActiveLoan } from '../../types'; 
 interface LibrarianLoansTabProps {
   activeLoans: ActiveLoan[];
   isProcessing: boolean;
@@ -117,7 +116,6 @@ export const LibrarianLoansTab: React.FC<LibrarianLoansTabProps> = ({
   );
 };
 
-// Estilos extraídos e padronizados do seu LibrarianApp original
 const styles = StyleSheet.create({
     content: {
     flex: 1,

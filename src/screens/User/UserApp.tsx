@@ -1,20 +1,13 @@
-import React, { act, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  ScrollView,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  TextInput,
   Alert,
 } from 'react-native';
 import { bookStorageService } from '../../services/Bookstorageservice';
 import { loanRequestService } from '../../services/Loanrequestservice';
 import {
   Book,
-  AvailabilityFilter,
   User,
   ActiveLoan,
   UserProfile,
@@ -43,8 +36,6 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
   const [profile, setProfile] = useState<UserProfile>({
     nickname: user.name,
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [availabilityFilter, setAvailabilityFilter] = useState<AvailabilityFilter>('all');
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [showBookDetail, setShowBookDetail] = useState(false);
@@ -65,41 +56,6 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
   };
-
-  // Filtrar livros baseado na busca e disponibilidade
-  const filteredBooks = useMemo(() => {
-    let filtered = books;
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        book =>
-          book.title.toLowerCase().includes(query) ||
-          book.author.toLowerCase().includes(query)
-      );
-    }
-
-    if (availabilityFilter === 'available') {
-      filtered = filtered.filter(book => book.availableCopies > 0);
-    } else if (availabilityFilter === 'unavailable') {
-      filtered = filtered.filter(book => book.availableCopies === 0);
-    }
-
-    return filtered;
-  }, [books, searchQuery, availabilityFilter]);
-
-  const dynamicSections = useMemo(() => {
-    if (books.length === 0) return [];
-    const available = books.filter(b => b.availableCopies > 0);
-    const categories = [...new Set(books.map(b => b.category).filter(Boolean))];
-    const sections: { title: string; data: Book[] }[] = [];
-    if (available.length > 0) sections.push({ title: "Disponíveis", data: available.slice(0, 10) });
-    categories.forEach(cat => {
-      const catBooks = books.filter(b => b.category === cat);
-      if (catBooks.length > 0) sections.push({ title: cat, data: catBooks });
-    });
-    return sections;
-  }, [books]);
 
   useEffect(() => {
     loadUserProfile(user.id, user.name).then(setProfile);
@@ -162,32 +118,6 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
     );
   };
 
-  const handleLegacyBorrow = (book: Book) => {
-    const newLoan: ActiveLoan = {
-      id: `loan_${Date.now()}`,
-      bookId: book.id,
-      bookTitle: book.title,
-      copyNumber: book.totalCopies - book.availableCopies + 1,
-      userId: user.id,
-      userName: user.name,
-      loanDate: new Date(),
-      dueDate: new Date(Date.now() + LOAN_DAYS * 24 * 60 * 60 * 1000),
-      status: 'active',
-      isOverdue: false,
-      fine: 0,
-    };
-
-    setActiveLoans([...activeLoans, newLoan]);
-    setBooks(
-      books.map(b =>
-        b.id === book.id
-          ? { ...b, availableCopies: b.availableCopies - 1 }
-          : b
-      )
-    );
-    setShowBookDetail(false);
-  };
-
   const handleReturnLoan = (loan: ActiveLoan) => {
     Alert.alert(
       'Confirmar Devolução',
@@ -225,37 +155,6 @@ export const UserApp: React.FC<Props> = ({ user, onLogout }) => {
       year: 'numeric',
     });
 
-  const renderDynamicSection = ({ item }: { item: { title: string; data: Book[] } }) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{item.title}</Text>
-      <FlatList
-        data={item.data}
-        renderItem={({ item: book }) => (
-          <TouchableOpacity
-            style={styles.bookCard}
-            onPress={() => { setSelectedBook(book); setShowBookDetail(true); }}
-          >
-            {book.coverUrl ? (
-              <Image source={{ uri: book.coverUrl }} style={styles.bookCover} />
-            ) : (
-              <View style={[styles.bookCover, { backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', padding: 6 }]}>
-                <Text style={{ color: '#64748b', fontSize: 10, fontWeight: '700', textAlign: 'center' }} numberOfLines={3}>{book.title}</Text>
-              </View>
-            )}
-            <View style={styles.bookInfo}>
-              <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
-              <Text style={styles.bookAuthor} numberOfLines={1}>{book.author}</Text>
-              <Text style={styles.bookAvailability}>
-                {book.availableCopies > 0 ? `${book.availableCopies} disponível(is)` : 'Indisponível'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
-        keyExtractor={b => b.id}
-        scrollEnabled={false}
-      />
-    </View>
-  );
 
   if (showBookDetail && selectedBook) {
     return (

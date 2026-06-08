@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Certifique-se de que a importação bate com o seu projeto
+import { Ionicons } from '@expo/vector-icons'; 
 import { ProfileMenu } from './LibProfile';
-// Tipagens necessárias para o Header
-interface User {
+
+interface User { 
   name: string;
   email: string;
 }
@@ -47,7 +47,6 @@ export const LibrarianHeader: React.FC<LibrarianHeaderProps> = ({
   );
 };
 
-// Mova os estilos específicos do header para cá se preferir isolar completamente
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',

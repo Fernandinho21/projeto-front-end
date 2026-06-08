@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Ajuste conforme sua biblioteca de ícones
+import { Ionicons } from '@expo/vector-icons'; 
 
 // Tipagem das abas existentes
 type LibrarianTab = 'requests' | 'loans' | 'inventory';
@@ -103,7 +103,6 @@ export const LibrarianNavigation: React.FC<LibrarianNavigationProps> = ({
   );
 };
 
-// Seus estilos de navegação colados aqui para isolamento total
 const styles = StyleSheet.create({
   navigation: {
     flexDirection: 'row',

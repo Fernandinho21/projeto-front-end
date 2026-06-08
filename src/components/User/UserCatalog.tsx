@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Book } from '../../types'; 
-import { NetflixCatalog } from './NetflixCatalogTypo'; // Mantenha o nome exato do seu arquivo de import
+import { NetflixCatalog } from './NetflixCatalogTypo'; 
 
 interface UserCatalogTabProps {
   books: Book[];
@@ -10,7 +10,7 @@ interface UserCatalogTabProps {
 
 export const UserCatalogTab: React.FC<UserCatalogTabProps> = ({ books, onSelectBook }) => {
   
-  // Geramos as seções dinamicamente baseadas em todas as categorias existentes no banco de dados
+  // Gera as seções dinamicamente baseadas em todas as categorias existentes no banco de dados
   const carrosselSections = useMemo(() => {
     const sections = [];
 

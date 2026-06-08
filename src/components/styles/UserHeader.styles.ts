@@ -79,7 +79,7 @@ export const styles = StyleSheet.create({
     padding: 10,
   },
   searchInput: {
-    flex: 1, // Faz o campo de texto ocupar todo o espaço restante
+    flex: 1, 
     height: 40,
     color: '#333',
     fontSize: 16,

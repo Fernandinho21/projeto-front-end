@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,12 @@ import {
   Animated
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Book } from '../../types'; // adjust path as needed
-
+import { Book } from '../../types'; 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CONTROLS_HEIGHT = 96;
 
-// ─── tunables ────────────────────────────────────────────────────────────────
+// ─── Cards_Livros ────────────────────────────────────────────────────────────────
 const CARD_WIDTH = 120;
 const CARD_HEIGHT = 180;
 const CARD_MARGIN = 8;
@@ -35,8 +34,7 @@ interface Props {
   onSelectBook: (book: Book) => void;
 }
 
-// ── InfiniteRow ───────────────────────────────────────────────────────────────
-// A horizontally scrollable row of book cards. Looping active only with 3 or more items.
+// ── Carrossel ───────────────────────────────────────────────────────────────
 const InfiniteRow: React.FC<{ books: Book[]; onSelect: (b: Book) => void }> = ({
   books,
   onSelect,
@@ -143,7 +141,6 @@ const InfiniteRow: React.FC<{ books: Book[]; onSelect: (b: Book) => void }> = ({
         ))}
       </ScrollView>
 
-      {/* COMPONENTE DA CRUNCHYROLL: Seta + Esvaecimento Sutil (Visível apenas se houver mais de 2 itens) */}
       {books.length > 2 && (
         <View style={card.rightOverlay} pointerEvents="none">
           <View style={card.fadeOverlay} />
@@ -193,26 +190,25 @@ const card = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 35.5,
-    width: 25, // Largura bem reduzida para ficar sutil igual ao print da Crunchyroll
+    width: 25, 
     justifyContent: 'center',
     alignItems: 'center',
   },
   fadeOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(41, 41, 41, 0.64)', // Camada translúcida sutil sobre os cards
-    opacity: 0.85,
+    backgroundColor: 'rgba(41, 41, 41, 0.64)', 
     borderBottomLeftRadius: 10,
     borderTopLeftRadius: 10
   },
   arrowIndicator: {
     zIndex: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.4)', // Sombra para garantir a leitura da seta sobre imagens claras
+    textShadowColor: 'rgba(0, 0, 0, 0.4)', 
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   }
 });
 
-// ── NetflixCatalog (main export) ──────────────────────────────────────────────
+// ── Catalog ─────────────────────────────────────────────────────────────────────────────────────
 export const NetflixCatalog: React.FC<Props> = ({ books, sections, onSelectBook }) => {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'available' | 'unavailable'>('all');
@@ -249,11 +245,9 @@ export const NetflixCatalog: React.FC<Props> = ({ books, sections, onSelectBook 
       return;
     }
 
-    // Pega o valor atual acumulado na animação
     // @ts-ignore
     let newValue = headerClampedScroll._value + diff;
 
-    // Trava o valor entre 0 (totalmente visível) e a altura máxima da barra (totalmente escondida)
     if (newValue < 0) {
       newValue = 0;
     } else if (newValue > CONTROLS_HEIGHT) {
@@ -313,7 +307,7 @@ export const NetflixCatalog: React.FC<Props> = ({ books, sections, onSelectBook 
       <ScrollView 
         style={nc.scroll} 
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16} // Mantém captura ultrarrápida do toque
+        scrollEventThrottle={16} 
         onScroll={handleScroll}
         contentContainerStyle={{ paddingTop: CONTROLS_HEIGHT + 12 }}
       >
@@ -347,7 +341,6 @@ const nc = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 12,
-    // ESSENCIAL: Fixa a barra no topo absoluto para que o scroll passe por trás dela
     position: 'absolute',
     top: 0,
     left: 0,

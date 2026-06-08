@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LoanRequest } from '../../types'; // Ajuste o caminho dos tipos conforme seu projeto
+import { LoanRequest } from '../../types'; 
 
 interface LibrarianRequestsTabProps {
   pendingRequests: LoanRequest[];
@@ -102,7 +102,6 @@ export const LibrarianRequestsTab: React.FC<LibrarianRequestsTabProps> = ({
   );
 };
 
-// Estilos extraídos do seu LibrarianApp para garantir o mesmo visual
 const styles = StyleSheet.create({
   content: {
     flex: 1,

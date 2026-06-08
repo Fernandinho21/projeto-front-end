@@ -30,9 +30,7 @@ export const UserNavbar: React.FC<Props> = ({
   return (
     <>
       <View style={styles.header}>
-        {/* Substituído o ProfileMenu e o Bloco de textos pessoais pelo Ícone do App */}
         <View style={styles.headerIdentity}>
-          {/* ÍCONE DO APLICATIVO (Estilo AuthScreen) */}
           <Ionicons name="library" size={32} color="#0f172a"/>
 
           <View style={styles.headerTextBlock}>

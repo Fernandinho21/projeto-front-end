@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +13,7 @@ import {
 import { AddBookScreen } from '../Admin/AddBookScreen';
 import { bookStorageService } from '../../services/Bookstorageservice';
 import { Book, User } from '../../types';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 type Props = {
   user: User;
   onLogout: () => void;

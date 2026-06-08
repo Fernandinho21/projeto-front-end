@@ -6,7 +6,7 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
-import { Book } from '../../types'; // Ajuste o caminho dos tipos conforme seu projeto
+import { Book } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 
 interface LibrarianInventoryTabProps {
@@ -86,7 +86,7 @@ export const LibrarianInventoryTab: React.FC<LibrarianInventoryTabProps> = ({ bo
   );
 };
 
-// Estilos extraídos e padronizados do seu LibrarianApp original
+
 const styles = StyleSheet.create({
   content: {
     flex: 1,

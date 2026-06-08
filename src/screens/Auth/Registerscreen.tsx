@@ -8,7 +8,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppRole } from '../../types';
