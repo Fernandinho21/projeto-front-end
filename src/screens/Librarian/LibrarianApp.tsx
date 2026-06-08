@@ -10,11 +10,9 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { bookStorageService } from '../../services/Bookstorageservice';
 import { loanRequestService } from '../../services/Loanrequestservice';
 import { Book, User, LoanRequest, ActiveLoan, UserProfile } from '../../types';
-import { ProfileMenu } from '../../components/Lib/LibProfile';
 import { loadUserProfile, saveUserProfile } from '../../services/profileStorage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LibrarianHeader } from '../../components/Lib/LibHeader';

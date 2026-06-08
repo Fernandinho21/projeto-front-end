@@ -46,15 +46,42 @@ export const UserLoansTab: React.FC<Props> = ({
                 </Text>
 
                 <View style={styles.requestStatus}>
-                  <Ionicons
-                    name="time-outline"
-                    size={15}
-                    color="#b45309"
-                  />
-
-                  <Text style={styles.requestStatusText}>
-                    Aguardando aprovação do bibliotecário
-                  </Text>
+                  <View style={styles.requestStatus}>
+                    {request.status === 'pending' ? (
+                      <>
+                        <Ionicons
+                          name="time-outline"
+                          size={15}
+                          color="#b45309"
+                        />
+                        <Text style={[styles.requestStatusText, { color: '#b45309' }]}>
+                          Aguardando aprovação do bibliotecário
+                        </Text>
+                      </>
+                    ) : request.status === 'approved' ? (
+                      <>
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={15}
+                          color="#10b981"
+                        />
+                        <Text style={[styles.requestStatusText, { color: '#10b981', fontWeight: '600' }]}>
+                          ✓ Pedido Aprovado
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Ionicons
+                          name="close-circle-outline"
+                          size={15}
+                          color="#ef4444"
+                        />
+                        <Text style={[styles.requestStatusText, { color: '#ef4444', fontWeight: '600' }]}>
+                          ✕ Pedido Rejeitado
+                        </Text>
+                      </>
+                    )}
+                  </View>
                 </View>
               </View>
             </View>

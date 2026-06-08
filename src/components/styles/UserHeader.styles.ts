@@ -24,7 +24,7 @@ export const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2563eb',
   },
   userEmail: {
     fontSize: 12,

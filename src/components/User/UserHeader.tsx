@@ -5,9 +5,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
 import { User, UserProfile } from '../../types';
-import { ProfileMenu } from '../Lib/LibProfile';
 import { styles } from '../styles/UserHeader.styles';
 
 type UserTab = 'catalog' | 'my-loans' | 'profile';
@@ -32,22 +30,17 @@ export const UserNavbar: React.FC<Props> = ({
   return (
     <>
       <View style={styles.header}>
+        {/* Substituído o ProfileMenu e o Bloco de textos pessoais pelo Ícone do App */}
         <View style={styles.headerIdentity}>
-          <ProfileMenu
-            name={user.name}
-            email={user.email}
-            roleLabel="Leitor"
-            profile={profile}
-            onChangeProfile={onChangeProfile}
-          />
+          {/* ÍCONE DO APLICATIVO (Estilo AuthScreen) */}
+          <Ionicons name="library" size={32} color="#0f172a"/>
 
           <View style={styles.headerTextBlock}>
-            <Text style={styles.welcomeText}>
-              Bem-vindo, {profile.nickname}!
+            <Text style={[styles.welcomeText, { fontSize: 18, fontWeight: 'bold' }]}>
+              Biblioteca Mobile
             </Text>
-
-            <Text style={styles.userEmail}>
-              {user.email}
+            <Text style={[styles.userEmail, { opacity: 0.8 }]}>
+              Página de Usuário
             </Text>
           </View>
         </View>
